@@ -20,3 +20,4 @@ orientation = landscape
 [buildozer]
 log_level = 2
 EOF
+# Build trigger
