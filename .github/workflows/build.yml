@@ -32,19 +32,26 @@ jobs:
         pip install --upgrade pip
         pip install buildozer cython
         
-    - name: Fix Android SDK tools
+    - name: Force specific Android SDK version
       run: |
         mkdir -p ~/.android
         touch ~/.android/repositories.cfg
         
-        # Скачиваем правильные SDK tools
+        # Устанавливаем стабильную версию SDK tools
         wget -q https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
-        mkdir -p ~/.buildozer/android/platform/android-sdk
-        unzip -q commandlinetools-linux-8512546_latest.zip -d ~/.buildozer/android/platform/android-sdk
-        mv ~/.buildozer/android/platform/android-sdk/cmdline-tools ~/.buildozer/android/platform/android-sdk/tools
+        mkdir -p android-sdk-fixed
+        unzip -q commandlinetools-linux-8512546_latest.zip -d android-sdk-fixed
+        mv android-sdk-fixed/cmdline-tools android-sdk-fixed/tools
         
-        # Принимаем лицензии
-        yes | ~/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager --sdk_root=~/.buildozer/android/platform/android-sdk --licenses || true
+        # Принимаем ВСЕ лицензии
+        yes | android-sdk-fixed/tools/bin/sdkmanager --sdk_root=android-sdk-fixed --licenses
+        
+        # Устанавливаем КОНКРЕТНЫЕ версии
+        android-sdk-fixed/tools/bin/sdkmanager --sdk_root=android-sdk-fixed "platforms;android-33" "build-tools;33.0.0" "platform-tools"
+        
+        # ЗАМЕНЯЕМ папку Buildozer SDK на нашу
+        rm -rf ~/.buildozer/android/platform/android-sdk
+        cp -r android-sdk-fixed ~/.buildozer/android/platform/android-sdk
         
     - name: Build APK with Buildozer
       run: |
