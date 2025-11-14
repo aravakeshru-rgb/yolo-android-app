@@ -25,26 +25,18 @@ jobs:
           git \
           zip \
           unzip \
-          libncurses5-dev \
-          wget
+          libncurses5-dev
         
     - name: Install Python dependencies
       run: |
         pip install --upgrade pip
         pip install buildozer cython
         
-    - name: Setup Android SDK and accept licenses
+    - name: Force accept Android licenses before Buildozer
       run: |
         mkdir -p ~/.android
         touch ~/.android/repositories.cfg
-        wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
-        mkdir -p android-sdk/cmdline-tools
-        unzip commandlinetools-linux-8512546_latest.zip -d android-sdk/cmdline-tools
-        mv android-sdk/cmdline-tools/cmdline-tools android-sdk/cmdline-tools/latest
-        echo "export ANDROID_SDK_ROOT=\$PWD/android-sdk" >> $GITHUB_ENV
-        echo "export PATH=\$PATH:\$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_ENV
-        yes | android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=android-sdk --licenses
-        android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=android-sdk "build-tools;30.0.3" "platforms;android-28"
+        yes | /home/runner/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager --licenses || true
         
     - name: Build APK with Buildozer
       run: |
