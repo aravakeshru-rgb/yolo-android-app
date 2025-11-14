@@ -33,16 +33,24 @@ jobs:
         pip install --upgrade pip
         pip install buildozer cython
         
-    - name: Setup Android SDK manually
+    - name: NUCLEAR OPTION: Replace Buildozer SDK with ours
       run: |
+        # Создаем папку для Buildozer SDK
+        mkdir -p ~/.buildozer/android/platform/android-sdk
+        
+        # Скачиваем официальный Android SDK
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
+        mkdir -p ~/.buildozer/android/platform/android-sdk
+        unzip -q commandlinetools-linux-8512546_latest.zip -d ~/.buildozer/android/platform/android-sdk
+        mv ~/.buildozer/android/platform/android-sdk/cmdline-tools ~/.buildozer/android/platform/android-sdk/latest
+        
+        # Принимаем ВСЕ лицензии
         mkdir -p ~/.android
         touch ~/.android/repositories.cfg
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
-        mkdir -p android-cmdline
-        unzip -q commandlinetools-linux-8512546_latest.zip -d android-cmdline
-        mv android-cmdline/cmdline-tools android-cmdline/latest
-        yes | android-cmdline/latest/bin/sdkmanager --sdk_root=android-cmdline --licenses
-        android-cmdline/latest/bin/sdkmanager --sdk_root=android-cmdline "platforms;android-33" "build-tools;33.0.0"
+        yes | ~/.buildozer/android/platform/android-sdk/latest/bin/sdkmanager --sdk_root=~/.buildozer/android/platform/android-sdk --licenses
+        
+        # Устанавливаем нужные пакеты в папку Buildozer
+        ~/.buildozer/android/platform/android-sdk/latest/bin/sdkmanager --sdk_root=~/.buildozer/android/platform/android-sdk "platforms;android-33" "build-tools;33.0.0" "platform-tools"
         
     - name: Build APK with Buildozer
       run: |
