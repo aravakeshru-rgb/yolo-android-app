@@ -25,39 +25,22 @@ jobs:
           git \
           zip \
           unzip \
-          libncurses5-dev \
-          autoconf \
-          libtool \
-          pkg-config
+          libncurses5-dev
         
     - name: Install Python dependencies
       run: |
         pip install --upgrade pip
-        pip install cython buildozer
+        pip install buildozer cython
         
-    - name: Build with python-for-android directly
+    - name: Build APK with Buildozer (FULL VERSION)
       run: |
-        git clone https://github.com/kivy/python-for-android
-        cd python-for-android
-        pip install -e .
-        
-        # Собираем APK вручную
-        python3 -m pythonforandroid.toolchain create \
-          --dist_name=yoloapp \
-          --bootstrap=sdl2 \
-          --requirements=python3,kivy==2.1.0,numpy \
-          --arch=armeabi-v7a \
-          --copy-libs \
-          --color=always \
-          --ndk-api=21 \
-          --ignore-setup-py \
-          --debug
-        
-        # Находим и копируем APK
-        find . -name "*.apk" -exec cp {} ../yolo-app.apk \;
+        # Принудительно создаем папку для лицензий
+        mkdir -p ~/.android
+        touch ~/.android/repositories.cfg
+        buildozer android debug
         
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
         name: yolo-app-apk
-        path: yolo-app.apk
+        path: bin/*.apk
