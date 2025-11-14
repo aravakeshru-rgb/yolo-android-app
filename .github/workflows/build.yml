@@ -25,18 +25,37 @@ jobs:
           git \
           zip \
           unzip \
-          libncurses5-dev
+          libncurses5-dev \
+          wget
         
     - name: Install Python dependencies
       run: |
         pip install --upgrade pip
         pip install buildozer cython
         
-    - name: Build APK with Buildozer (FULL VERSION)
+    - name: HACK: Force accept ALL Android licenses
       run: |
-        # Принудительно создаем папку для лицензий
         mkdir -p ~/.android
-        touch ~/.android/repositories.cfg
+        echo "### User Sources for Android SDK Manager" > ~/.android/repositories.cfg
+        
+        # Скачиваем и устанавливаем Android SDK Command Line Tools
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
+        mkdir -p android-cmdline
+        unzip -q commandlinetools-linux-8512546_latest.zip -d android-cmdline
+        mv android-cmdline/cmdline-tools android-cmdline/latest
+        
+        # Принимаем ВСЕ лицензии принудительно
+        yes | android-cmdline/latest/bin/sdkmanager --sdk_root=android-cmdline --licenses
+        
+        # Устанавливаем нужные пакеты
+        android-cmdline/latest/bin/sdkmanager --sdk_root=android-cmdline "platforms;android-33" "build-tools;33.0.0"
+        
+        # Копируем лицензии в папку Buildozer
+        mkdir -p ~/.buildozer/android/platform/android-sdk
+        cp -r ~/.android/* ~/.buildozer/android/platform/android-sdk/ 2>/dev/null || true
+        
+    - name: Build APK with Buildozer
+      run: |
         buildozer android debug
         
     - name: Upload APK artifact
